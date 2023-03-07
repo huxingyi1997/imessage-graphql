@@ -1,0 +1,22 @@
+{
+  "name": "imessage-graphql",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "client:dev": "pnpm --filter client run dev",
+    "commit": "git-cz",
+    "prepare": "husky install",
+    "lint": "prettier --write **/*.{js,jsx,ts,tsx,json,css,scss,md}"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@commitlint/cli": "^17.4.4",
+    "@commitlint/config-conventional": "^17.4.4",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.2",
+    "prettier": "^2.8.4"
+  }
+}
