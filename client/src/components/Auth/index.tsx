@@ -2,6 +2,14 @@ import { Button, Center, Image, Input, Stack, Text } from "@chakra-ui/react";
 import { useState, type FC } from "react";
 import { signIn } from "next-auth/react";
 import type { Session } from "next-auth";
+import { useMutation } from "@apollo/client";
+import toast from "react-hot-toast";
+
+import { UserOperations } from "../../graphql/operations/user";
+import type {
+  CreateUsernameData,
+  CreateUsernameVariables,
+} from "../../util/types";
 
 interface IAuthProps {
   session: Session | null;
@@ -11,6 +19,11 @@ interface IAuthProps {
 const Auth: FC<IAuthProps> = ({ session, reloadSession }) => {
   const [username, setUsername] = useState<string>("");
 
+  const [createUsername, { loading, error }] = useMutation<
+    CreateUsernameData,
+    CreateUsernameVariables
+  >(UserOperations.Mutations.createUsername);
+
   const onSubmit = async () => {
     if (!username) return;
 
@@ -18,12 +31,27 @@ const Auth: FC<IAuthProps> = ({ session, reloadSession }) => {
       /**
        * createUsername mutation to send our username to the GraphQL API
        */
+      const { data } = await createUsername({ variables: { username } });
 
+      if (!data?.createUsername) {
+        throw new Error();
+      }
+
+      if (data.createUsername.error) {
+        const {
+          createUsername: { error },
+        } = data;
+
+        throw new Error(error);
+      }
+
+      toast.success("Username successfully created! 🚀");
       /**
        * Reload session to obtain new username
        */
       reloadSession();
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(`There was an onSubmit error: ${error?.message}`);
       console.log("onSubmit error", error);
     }
   };

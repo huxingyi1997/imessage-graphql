@@ -5,15 +5,17 @@ import express from "express";
 import http from "http";
 import cors from "cors";
 import bodyParser from "body-parser";
+import * as dotenv from "dotenv";
+import { getSession } from "next-auth/react";
+import { PrismaClient } from "@prisma/client";
+
 import { resolvers } from "./graphql/resolvers";
 import { typeDefs } from "./graphql/typeDefs";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-
-interface MyContext {
-  token?: string;
-}
+import { GraphQLContext, Session } from "./util/types";
 
 const main = async () => {
+  dotenv.config();
   // Required logic for integrating with Express
   const app = express();
   // Our httpServer handles incoming requests to our Express app.
@@ -26,11 +28,19 @@ const main = async () => {
     resolvers,
   });
 
+  const corsOptions = {
+    origin: process.env.CLIENT_ORIGIN,
+    credentials: true,
+  };
+  /**
+   * Context parameters
+   */
+  const prisma = new PrismaClient();
+
   // Same ApolloServer initialization as before, plus the drain plugin
   // for our httpServer.
-  const server = new ApolloServer<MyContext>({
+  const server = new ApolloServer({
     schema,
-    csrfPrevention: true,
     cache: "bounded",
     plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
   });
@@ -40,13 +50,17 @@ const main = async () => {
   // Set up our Express middleware to handle CORS, body parsing,
   // and our expressMiddleware function.
   app.use(
-    "/",
-    cors<cors.CorsRequest>(),
+    "/graphql",
+    cors<cors.CorsRequest>(corsOptions),
     bodyParser.json(),
     // expressMiddleware accepts the same arguments:
     // an Apollo Server instance and optional configuration options
     expressMiddleware(server, {
-      context: async ({ req }) => ({ token: req.headers.token }),
+      context: async ({ req, res }): Promise<GraphQLContext> => {
+        const session = (await getSession({ req })) as Session;
+
+        return { session, prisma };
+      },
     })
   );
 
@@ -56,7 +70,9 @@ const main = async () => {
   await new Promise<void>((resolve) =>
     httpServer.listen({ port: PORT }, resolve)
   );
-  console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
+  console.log(
+    `🚀 Server ready at http://localhost:${PORT}/graphql, Cliet visit from ${corsOptions.origin}`
+  );
 };
 
 main().catch((err) => console.log(err));

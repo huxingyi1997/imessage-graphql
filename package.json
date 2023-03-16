@@ -7,11 +7,14 @@
     "dev:client": "pnpm --filter client run dev",
     "dev:server": "pnpm --filter server run dev",
     "commit": "git-cz",
+    "preinstall": "npx only-allow pnpm",
     "prepare": "husky install",
     "lint": "prettier --write **/*.{js,jsx,ts,tsx,json,css,scss,md}"
   },
   "dependencies": {
-    "graphql": "^16.6.0"
+    "graphql": "^16.6.0",
+    "next-auth": "^4.20.1",
+    "@prisma/client": "^4.11.0"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.4.4",
@@ -20,6 +23,7 @@
     "husky": "^8.0.3",
     "lint-staged": "^13.1.2",
     "prettier": "^2.8.4",
+    "prisma": "^4.11.0",
     "typescript": "4.9.5"
   }
 }
