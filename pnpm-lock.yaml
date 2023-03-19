@@ -43,6 +43,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0
       react-hot-toast: ^2.4.0
+      react-icons: ^4.8.0
     dependencies:
       '@apollo/client': 3.7.10_gdcq4dv6opitr3wbfwyjmanyra
       '@chakra-ui/react': 2.5.1_h6z3b2rujpcgk2nnxer2nh5ufu
@@ -54,6 +55,7 @@ importers:
       react: 18.2.0
       react-dom: 18.2.0_react@18.2.0
       react-hot-toast: 2.4.0_owo25xnefcwdq3zjgtohz6dbju
+      react-icons: 4.8.0_react@18.2.0
     devDependencies:
       '@types/react': 18.0.28
       '@types/react-dom': 18.0.11
@@ -4040,6 +4042,14 @@ packages:
       react-dom: 18.2.0_react@18.2.0
     transitivePeerDependencies:
       - csstype
+    dev: false
+
+  /react-icons/4.8.0_react@18.2.0:
+    resolution: {integrity: sha512-N6+kOLcihDiAnj5Czu637waJqSnwlMNROzVZMhfX68V/9bu9qHaMIJC4UdozWoOk57gahFCNHwVvWzm0MTzRjg==}
+    peerDependencies:
+      react: '*'
+    dependencies:
+      react: 18.2.0
     dev: false
 
   /react-is/16.13.1:

@@ -67,7 +67,9 @@ const Auth: FC<IAuthProps> = ({ session, reloadSession }) => {
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
-            <Button onClick={() => onSubmit()}>Save</Button>
+            <Button onClick={() => onSubmit()} isLoading={loading}>
+              Save
+            </Button>
           </>
         ) : (
           <>
