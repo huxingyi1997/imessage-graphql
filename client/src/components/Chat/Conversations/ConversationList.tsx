@@ -8,7 +8,7 @@ interface ConversationListProps {
   session: Session;
 }
 
-const ConversationList: FC<ConversationListProps> = (props) => {
+const ConversationList: FC<ConversationListProps> = ({ session }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const onOpen = () => {
@@ -34,7 +34,7 @@ const ConversationList: FC<ConversationListProps> = (props) => {
           Find or start a conversation
         </Text>
       </Box>
-      <ConversationModal isOpen={isOpen} onClose={onClose} />
+      <ConversationModal session={session} isOpen={isOpen} onClose={onClose} />
     </Box>
   );
 };

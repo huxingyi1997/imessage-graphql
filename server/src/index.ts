@@ -71,7 +71,7 @@ const main = async () => {
     httpServer.listen({ port: PORT }, resolve)
   );
   console.log(
-    `🚀 Server ready at http://localhost:${PORT}/graphql, Cliet visit from ${corsOptions.origin}`
+    `🚀 Server ready at http://localhost:${PORT}/graphql, Client visit from ${corsOptions.origin}`
   );
 };
 

@@ -1,23 +1,11 @@
 import { gql } from "graphql-tag";
 
-export const ypeDefs = gql`
-  scalar Date
-
-  type User {
-    id: String
-    username: String
-  }
-
-  type Query {
-    searchUsers(username: String!): [User]
-  }
-
+export const conversationTypeDefs = gql`
   type Mutation {
-    createUsername(username: String!): CreateUsernameResponse
+    createConversation(participantIds: [String]): CreateConversationResponse
   }
 
-  type CreateUsernameResponse {
-    success: Boolean
-    error: String
+  type CreateConversationResponse {
+    conversationId: String
   }
 `;
