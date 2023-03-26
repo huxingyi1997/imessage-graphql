@@ -6,10 +6,18 @@ export const userTypeDefs = gql`
   type User {
     id: String
     username: String
+    email: String
+    emailVerified: String
+    image: String
+  }
+
+  type SearchedUser {
+    id: String
+    username: String
   }
 
   type Query {
-    searchUsers(username: String!): [User]
+    searchUsers(username: String!): [SearchedUser]
   }
 
   type Mutation {

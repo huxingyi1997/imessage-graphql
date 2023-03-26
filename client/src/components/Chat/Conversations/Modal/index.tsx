@@ -13,6 +13,7 @@ import {
 import toast from "react-hot-toast";
 import { Session } from "next-auth";
 import { type FC, FormEvent, useState } from "react";
+import { useRouter } from "next/router";
 
 import { UserOperations } from "../../../../graphql/operations/user";
 import { ConverstionOperations } from "../../../../graphql/operations/converstion";
@@ -40,6 +41,8 @@ const ConversationModal: FC<ConversationModalProps> = ({
   const {
     user: { id: userId },
   } = session;
+
+  const router = useRouter();
 
   const [username, setUsername] = useState<string>("");
   const [searchUsers, { data, loading, error }] = useLazyQuery<
@@ -77,6 +80,24 @@ const ConversationModal: FC<ConversationModalProps> = ({
           participantIds,
         },
       });
+
+      if (!data?.createConversation) {
+        throw new Error("Failed to create conversation");
+      }
+
+      const {
+        createConversation: { conversationId },
+      } = data;
+
+      router.push({ query: { conversationId } });
+
+      /**
+       * Clear state and close modal
+       * on successful creation
+       */
+      setParticipants([]);
+      setUsername("");
+      onClose();
       console.log("HERE IS DATA", data);
     } catch (error: any) {
       console.log("createConversations error", error);
