@@ -12,9 +12,10 @@
     "lint": "prettier --write **/*.{js,jsx,ts,tsx,json,css,scss,md}"
   },
   "dependencies": {
+    "@prisma/client": "^4.11.0",
     "graphql": "^16.6.0",
-    "next-auth": "^4.20.1",
-    "@prisma/client": "^4.11.0"
+    "graphql-ws": "^5.12.0",
+    "next-auth": "^4.20.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.4.4",

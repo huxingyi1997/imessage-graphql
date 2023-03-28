@@ -43,3 +43,11 @@ export interface CreateConversationData {
 export interface CreateConversationsInput {
   participantIds: Array<string>;
 }
+
+export interface ConversationCreatedSubscriptionData {
+  subscriptionData: {
+    data: {
+      conversationCreated: ConversationPopulated;
+    };
+  };
+}

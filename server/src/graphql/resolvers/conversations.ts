@@ -7,7 +7,7 @@ export const conversationResolvers = {
   Query: {
     conversations: async (
       _: any,
-      args: any,
+      _args: any,
       context: GraphQLContext
     ): Promise<Array<ConversationPopulated>> => {
       const { session, prisma } = context;
@@ -62,7 +62,7 @@ export const conversationResolvers = {
       args: { participantIds: Array<string> },
       context: GraphQLContext
     ): Promise<{ conversationId: string }> => {
-      const { session, prisma } = context;
+      const { session, prisma, pubsub } = context;
       const { participantIds } = args;
 
       if (!session?.user) {
@@ -89,6 +89,9 @@ export const conversationResolvers = {
         });
 
         // emit a CONVERSATION_CREATED event using pubsub
+        pubsub.publish("CONVERSATION_CREATED", {
+          conversationCreated: conversation,
+        });
 
         return {
           conversationId: conversation.id,
@@ -97,6 +100,15 @@ export const conversationResolvers = {
         console.log("createConversation", error);
         throw new GraphQLError("Error creating conversation");
       }
+    },
+  },
+  Subscription: {
+    conversationCreated: {
+      subscribe: (_: any, __: any, context: GraphQLContext) => {
+        const { pubsub } = context;
+
+        return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
+      },
     },
   },
 };

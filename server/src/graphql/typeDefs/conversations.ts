@@ -26,4 +26,8 @@ export const conversationTypeDefs = gql`
   type Query {
     conversations: [Conversation]
   }
+
+  type Subscription {
+    conversationCreated: Conversation
+  }
 `;
