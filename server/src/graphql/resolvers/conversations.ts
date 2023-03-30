@@ -1,7 +1,12 @@
 import { Prisma } from "@prisma/client";
 import { GraphQLError } from "graphql";
+import { withFilter } from "graphql-subscriptions";
 
-import { ConversationPopulated, GraphQLContext } from "../../util/types";
+import {
+  ConversationCreatedSubscriptionPayload,
+  ConversationPopulated,
+  GraphQLContext,
+} from "../../util/types";
 
 export const conversationResolvers = {
   Query: {
@@ -104,11 +109,28 @@ export const conversationResolvers = {
   },
   Subscription: {
     conversationCreated: {
-      subscribe: (_: any, __: any, context: GraphQLContext) => {
-        const { pubsub } = context;
+      subscribe: withFilter(
+        (_: any, __: any, context: GraphQLContext) => {
+          const { pubsub } = context;
 
-        return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
-      },
+          return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
+        },
+        (
+          payload: ConversationCreatedSubscriptionPayload,
+          __: any,
+          context: GraphQLContext
+        ) => {
+          const { session } = context;
+          const {
+            conversationCreated: { participants },
+          } = payload;
+
+          const useIsParticipant = !!participants.find(
+            (participant) => participant.userId === session?.user?.id
+          );
+          return useIsParticipant;
+        }
+      ),
     },
   },
 };

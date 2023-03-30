@@ -16,7 +16,7 @@ import { type FC, FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
 import { UserOperations } from "../../../../graphql/operations/user";
-import { ConverstionOperations } from "../../../../graphql/operations/converstion";
+import { ConversationOperations } from "../../../../graphql/operations/converstion";
 import type {
   CreateConversationData,
   CreateConversationsInput,
@@ -52,7 +52,7 @@ const ConversationModal: FC<ConversationModalProps> = ({
   const [participants, setParticipants] = useState<Array<SearchedUser>>([]);
   const [createConversation, { loading: createConversationLoading }] =
     useMutation<CreateConversationData, CreateConversationsInput>(
-      ConverstionOperations.Mutations.createConversation
+      ConversationOperations.Mutations.createConversation
     );
 
   const onSearch = async (event: FormEvent) => {

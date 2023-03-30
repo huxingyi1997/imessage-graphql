@@ -2,7 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import { ApolloServerPluginDrainHttpServer } from "@apollo/server/plugin/drainHttpServer";
 import express from "express";
-import http from "http";
+import { createServer } from "http";
 import cors from "cors";
 import bodyParser from "body-parser";
 import * as dotenv from "dotenv";
@@ -11,27 +11,31 @@ import { PrismaClient } from "@prisma/client";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { PubSub } from "graphql-subscriptions";
+import { makeExecutableSchema } from "@graphql-tools/schema";
 
 import { resolvers } from "./graphql/resolvers";
 import { typeDefs } from "./graphql/typeDefs";
-import { makeExecutableSchema } from "@graphql-tools/schema";
 import { GraphQLContext, Session, SubscriptionContext } from "./util/types";
 
 const main = async () => {
   dotenv.config();
+  // Create an Express app and HTTP server; we will attach both the WebSocket server and the ApolloServer to this HTTP server.
   // Required logic for integrating with Express
   const app = express();
   // Our httpServer handles incoming requests to our Express app.
   // Below, we tell Apollo Server to "drain" this httpServer,
   // enabling our servers to shut down gracefully.
-  const httpServer = http.createServer(app);
+  const httpServer = createServer(app);
 
-  // Set up WebSocket server.
+  const graphqlPath = "/graphql";
+
+  // Create our WebSocket server using the HTTP server we just set up.
   const wsServer = new WebSocketServer({
     server: httpServer,
-    path: "/graphql/subscriptions",
+    path: graphqlPath + "/subscriptions",
   });
 
+  // Create the schema, which will be used separately by ApolloServer and the WebSocket server.
   const schema = makeExecutableSchema({
     typeDefs,
     resolvers,
@@ -70,15 +74,11 @@ const main = async () => {
     wsServer
   );
 
-  const corsOptions = {
-    origin: process.env.CLIENT_ORIGIN,
-    credentials: true,
-  };
-
   // Same ApolloServer initialization as before, plus the drain plugin
   // for our httpServer.
   const server = new ApolloServer({
     schema,
+    csrfPrevention: true,
     cache: "bounded",
     plugins: [
       // Proper shutdown for the HTTP server.
@@ -99,16 +99,20 @@ const main = async () => {
   // Ensure we wait for our server to start
   await server.start();
 
+  const corsOptions = {
+    origin: process.env.CLIENT_ORIGIN,
+    credentials: true,
+  };
   // Set up our Express middleware to handle CORS, body parsing,
   // and our expressMiddleware function.
   app.use(
-    "/graphql",
+    graphqlPath,
     cors<cors.CorsRequest>(corsOptions),
     bodyParser.json(),
     // expressMiddleware accepts the same arguments:
     // an Apollo Server instance and optional configuration options
     expressMiddleware(server, {
-      context: async ({ req, res }): Promise<GraphQLContext> => {
+      context: async ({ req }): Promise<GraphQLContext> => {
         const session = (await getSession({ req })) as Session;
 
         return { session, prisma, pubsub };
@@ -123,7 +127,7 @@ const main = async () => {
     httpServer.listen({ port: PORT }, resolve)
   );
   console.log(
-    `🚀 Server ready at http://localhost:${PORT}/graphql, Client visit from ${corsOptions.origin}`
+    `🚀 Server ready at http://localhost:${PORT}${graphqlPath}, Client visit from ${corsOptions.origin}`
   );
 };
 

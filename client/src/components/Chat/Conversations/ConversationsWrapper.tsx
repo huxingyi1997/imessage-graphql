@@ -4,11 +4,12 @@ import { Session } from "next-auth";
 import { FC, useEffect } from "react";
 
 import ConversationList from "./ConversationList";
-import { ConverstionOperations } from "../../../graphql/operations/converstion";
+import { ConversationOperations } from "../../../graphql/operations/converstion";
 import {
   ConversationCreatedSubscriptionData,
   ConversationsData,
 } from "../../../util/types";
+import { useRouter } from "next/router";
 interface ConversationsWrapperProps {
   session: Session;
 }
@@ -22,20 +23,31 @@ const ConversationsWrapper: FC<ConversationsWrapperProps> = ({ session }) => {
     loading: conversationsLoading,
     error: conversationsError,
     subscribeToMore,
-  } = useQuery<ConversationsData>(ConverstionOperations.Queries.conversations);
+  } = useQuery<ConversationsData>(ConversationOperations.Queries.conversations);
+  const router = useRouter();
+  const {
+    query: { conversationId },
+  } = router;
 
-  console.log("HERE IS QUERY DATA", conversationsData);
+  const onViewConversation = (conversationId: string) => {
+    /**
+     * 1. Push the conversationId to the router query params
+     */
+    router.push({ query: { conversationId } });
 
-  const subscribeToNewConverstions = () => {
+    /**
+     * 2. Only mark as read if conversation is unread
+     */
+  };
+
+  const subscribeToNewConversations = () => {
     subscribeToMore({
-      document: ConverstionOperations.Subscription.conversationCreated,
+      document: ConversationOperations.Subscription.conversationCreated,
       updateQuery: (
         prev,
         { subscriptionData }: ConversationCreatedSubscriptionData
       ) => {
         if (!subscriptionData.data) return prev;
-
-        console.log("HERE IS QUERY DATA", subscriptionData);
 
         const newConversation = subscriptionData.data.conversationCreated;
 
@@ -50,17 +62,22 @@ const ConversationsWrapper: FC<ConversationsWrapperProps> = ({ session }) => {
    * Execute subscription on mount
    */
   useEffect(() => {
-    subscribeToNewConverstions();
+    subscribeToNewConversations();
   }, []);
 
-  console.log("HERE IS conversations DATA", conversationsData);
-
   return (
-    <Box width={{ base: "100%", md: "400px" }} bg="whiteAlpha.50" px={3} py={6}>
+    <Box
+      display={{ base: conversationId ? "none" : "flex", md: "flex" }}
+      width={{ base: "100%", md: "400px" }}
+      bg="whiteAlpha.50"
+      px={3}
+      py={6}
+    >
       {/* Skeleton Loader */}
       <ConversationList
         session={session}
         conversations={conversationsData?.conversations ?? []}
+        onViewConversation={onViewConversation}
       />
     </Box>
   );

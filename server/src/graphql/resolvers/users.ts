@@ -30,7 +30,7 @@ export const userResolvers = {
           },
         });
 
-        return users;
+        return users.filter((user) => user.username !== myUsername);
       } catch (error: any) {
         console.log("searchUsers error", error);
         throw new GraphQLError(error?.message);

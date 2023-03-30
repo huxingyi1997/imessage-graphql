@@ -21,7 +21,7 @@ const ConversationFields = `
   updatedAt
 `;
 
-export const ConverstionOperations = {
+export const ConversationOperations = {
   Queries: {
     conversations: gql`
       query Conversations {
