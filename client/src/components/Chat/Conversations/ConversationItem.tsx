@@ -130,7 +130,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
           position="absolute"
           right={4}
         >
-          {formatRelative(new Date(conversation.updatedAt), new Date(), {
+          {formatRelative(conversation.updatedAt, new Date(), {
             locale: {
               ...enUS,
               formatRelative: (token: string) =>

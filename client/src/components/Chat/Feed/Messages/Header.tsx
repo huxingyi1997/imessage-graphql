@@ -19,7 +19,7 @@ const MessagesHeader: FC<MessagesHeaderProps> = ({
 }) => {
   const router = useRouter();
   const { data, loading } = useQuery<ConversationsData>(
-    ConversationOperations.Queries.conversations
+    ConversationOperations.Query.conversations
   );
 
   const conversation = data?.conversations.find(

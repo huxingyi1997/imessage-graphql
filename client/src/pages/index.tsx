@@ -8,8 +8,6 @@ import Auth from "../components/Auth";
 const Home: NextPage = () => {
   const { data: session } = useSession();
 
-  console.log("HERE IS SESSION", session);
-
   const reloadSession = () => {
     const event = new Event("visibilitychange");
     document.dispatchEvent(event);

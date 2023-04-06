@@ -1,5 +1,7 @@
 import { gql } from "@apollo/client";
 
+import { MessageFields } from "./messages";
+
 const ConversationFields = `
   id
   participants {
@@ -10,19 +12,13 @@ const ConversationFields = `
     hasSeenLatestMessage
   }
   latestMessage {
-    id
-    sender {
-      id
-      username
-    }
-    body
-    createdAt
+    ${MessageFields}
   }
   updatedAt
 `;
 
 export const ConversationOperations = {
-  Queries: {
+  Query: {
     conversations: gql`
       query Conversations {
         conversations {
@@ -31,7 +27,7 @@ export const ConversationOperations = {
       }
     `,
   },
-  Mutations: {
+  Mutation: {
     createConversation: gql`
       mutation CreatConversation($participantIds: [String]!) {
         createConversation(participantIds: $participantIds) {

@@ -10,9 +10,9 @@ import {
   ModalOverlay,
   Stack,
 } from "@chakra-ui/react";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { Session } from "next-auth";
-import { type FC, FormEvent, useState } from "react";
+import { type FC, type FormEvent, useState } from "react";
 import { useRouter } from "next/router";
 
 import { UserOperations } from "../../../../graphql/operations/user";
@@ -48,11 +48,11 @@ const ConversationModal: FC<ConversationModalProps> = ({
   const [searchUsers, { data, loading, error }] = useLazyQuery<
     SearchUsersData,
     SearchUsersInputs
-  >(UserOperations.Queries.searchUsers);
+  >(UserOperations.Query.searchUsers);
   const [participants, setParticipants] = useState<Array<SearchedUser>>([]);
   const [createConversation, { loading: createConversationLoading }] =
     useMutation<CreateConversationData, CreateConversationsInput>(
-      ConversationOperations.Mutations.createConversation
+      ConversationOperations.Mutation.createConversation
     );
 
   const onSearch = async (event: FormEvent) => {
@@ -60,8 +60,6 @@ const ConversationModal: FC<ConversationModalProps> = ({
     // search users query
     searchUsers({ variables: { username } });
   };
-
-  console.log("HERE IS SEARCH DATA", data);
 
   const addParticipant = (user: SearchedUser) => {
     setParticipants((prev) => [...prev, user]);
@@ -98,7 +96,6 @@ const ConversationModal: FC<ConversationModalProps> = ({
       setParticipants([]);
       setUsername("");
       onClose();
-      console.log("HERE IS DATA", data);
     } catch (error: any) {
       console.log("createConversations error", error);
       toast.error(error?.message);

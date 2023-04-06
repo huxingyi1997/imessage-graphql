@@ -13,8 +13,6 @@ const Participants: FC<ParticipantsProps> = ({
   participants,
   removeParticipant,
 }) => {
-  console.log("HERE ARE PARTICIPANTS", participants);
-
   return (
     <Flex mt={8} gap="10px" flexWrap="wrap">
       {participants.map((participant) => (

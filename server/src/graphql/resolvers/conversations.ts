@@ -85,7 +85,7 @@ export const conversationResolvers = {
               createMany: {
                 data: participantIds.map((id) => ({
                   userId: id,
-                  hasSeenLastestMessage: id === userId,
+                  hasSeenLatestMessage: id === userId,
                 })),
               },
             },

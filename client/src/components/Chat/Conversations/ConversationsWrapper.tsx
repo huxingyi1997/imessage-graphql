@@ -10,6 +10,7 @@ import {
   ConversationsData,
 } from "../../../util/types";
 import { useRouter } from "next/router";
+import SkeletonLoader from "../../common/SkeletonLoader";
 interface ConversationsWrapperProps {
   session: Session;
 }
@@ -23,7 +24,7 @@ const ConversationsWrapper: FC<ConversationsWrapperProps> = ({ session }) => {
     loading: conversationsLoading,
     error: conversationsError,
     subscribeToMore,
-  } = useQuery<ConversationsData>(ConversationOperations.Queries.conversations);
+  } = useQuery<ConversationsData>(ConversationOperations.Query.conversations);
   const router = useRouter();
   const {
     query: { conversationId },
@@ -69,16 +70,21 @@ const ConversationsWrapper: FC<ConversationsWrapperProps> = ({ session }) => {
     <Box
       display={{ base: conversationId ? "none" : "flex", md: "flex" }}
       width={{ base: "100%", md: "400px" }}
+      flexDirection="column"
       bg="whiteAlpha.50"
+      gap={4}
       px={3}
       py={6}
     >
-      {/* Skeleton Loader */}
-      <ConversationList
-        session={session}
-        conversations={conversationsData?.conversations ?? []}
-        onViewConversation={onViewConversation}
-      />
+      {conversationsLoading ? (
+        <SkeletonLoader count={7} height="80px" width="360px" />
+      ) : (
+        <ConversationList
+          session={session}
+          conversations={conversationsData?.conversations ?? []}
+          onViewConversation={onViewConversation}
+        />
+      )}
     </Box>
   );
 };

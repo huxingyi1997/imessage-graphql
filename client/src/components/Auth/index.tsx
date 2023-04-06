@@ -3,7 +3,7 @@ import { useState, type FC } from "react";
 import { signIn } from "next-auth/react";
 import type { Session } from "next-auth";
 import { useMutation } from "@apollo/client";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 import { UserOperations } from "../../graphql/operations/user";
 import type {
@@ -22,7 +22,7 @@ const Auth: FC<IAuthProps> = ({ session, reloadSession }) => {
   const [createUsername, { loading, error }] = useMutation<
     CreateUsernameData,
     CreateUsernameVariables
-  >(UserOperations.Mutations.createUsername);
+  >(UserOperations.Mutation.createUsername);
 
   const onSubmit = async () => {
     if (!username) return;
