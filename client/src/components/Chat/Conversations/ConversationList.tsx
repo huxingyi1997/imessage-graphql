@@ -3,14 +3,20 @@ import { Session } from "next-auth";
 import { useRouter } from "next/router";
 import { FC, useState } from "react";
 
-import { ConversationPopulated } from "../../../../../server/src/util/types";
+import {
+  ConversationPopulated,
+  ParticipantPopulated,
+} from "../../../../../server/src/util/types";
 import ConversationItem from "./ConversationItem";
 import ConversationModal from "./Modal";
 
 interface ConversationListProps {
   session: Session;
   conversations: Array<ConversationPopulated>;
-  onViewConversation: (conversationId: string) => void;
+  onViewConversation: (
+    conversationId: string,
+    hasSeenLatestMessage?: boolean
+  ) => void;
 }
 
 const ConversationList: FC<ConversationListProps> = ({
@@ -33,6 +39,12 @@ const ConversationList: FC<ConversationListProps> = ({
     user: { id: userId },
   } = session;
 
+  const getUserParticipantObject = (conversation: ConversationPopulated) => {
+    return conversation.participants.find(
+      (p: ParticipantPopulated) => p.user.id === userId
+    ) as ParticipantPopulated;
+  };
+
   return (
     <Box width="100%">
       <Box
@@ -49,15 +61,22 @@ const ConversationList: FC<ConversationListProps> = ({
         </Text>
       </Box>
       <ConversationModal session={session} isOpen={isOpen} onClose={onClose} />
-      {conversations.map((conversation) => (
-        <ConversationItem
-          key={conversation.id}
-          userId={userId}
-          conversation={conversation}
-          onClick={() => onViewConversation(conversation.id)}
-          isSelected={conversation.id === router.query.conversationId}
-        />
-      ))}
+      {conversations.map((conversation) => {
+        const { hasSeenLatestMessage } = getUserParticipantObject(conversation);
+
+        return (
+          <ConversationItem
+            key={conversation.id}
+            userId={userId}
+            conversation={conversation}
+            hasSeenLatestMessage={hasSeenLatestMessage}
+            onClick={() =>
+              onViewConversation(conversation.id, hasSeenLatestMessage)
+            }
+            isSelected={conversation.id === router.query.conversationId}
+          />
+        );
+      })}
     </Box>
   );
 };
