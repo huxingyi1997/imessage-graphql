@@ -35,6 +35,22 @@ export const ConversationOperations = {
         }
       }
     `,
+    updateParticipants: gql`
+      mutation UpdateParticipants(
+        $conversationId: String!
+        $participantIds: [String]!
+      ) {
+        updateParticipants(
+          conversationId: $conversationId
+          participantIds: $participantIds
+        )
+      }
+    `,
+    deleteConversation: gql`
+      mutation deleteConversation($conversationId: String!) {
+        deleteConversation(conversationId: $conversationId)
+      }
+    `,
     markConversationAsRead: gql`
       mutation MarkConversationAsRead(
         $userId: String!
@@ -49,6 +65,24 @@ export const ConversationOperations = {
       subscription ConversationCreated {
         conversationCreated {
           ${ConversationFields}
+        }
+      }
+    `,
+    conversationUpdated: gql`
+    subscription ConversationUpdated {
+      conversationUpdated {
+        conversation {
+          ${ConversationFields}
+        }
+        addedUserIds
+        removedUserIds
+      }
+    }
+  `,
+    conversationDeleted: gql`
+      subscription ConversationDeleted {
+        conversationDeleted {
+          id
         }
       }
     `,

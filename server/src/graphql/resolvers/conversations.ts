@@ -1,10 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { GraphQLError } from "graphql";
 import { withFilter } from "graphql-subscriptions";
+import { userIsConversationParticipant } from "../../util/functions";
 
 import {
   ConversationCreatedSubscriptionPayload,
+  ConversationDeletedSubscriptionPayload,
   ConversationPopulated,
+  ConversationUpdatedSubscriptionData,
   GraphQLContext,
 } from "../../util/types";
 
@@ -148,6 +151,51 @@ export const conversationResolvers = {
 
       return true;
     },
+    deleteConversation: async (
+      _: any,
+      args: { conversationId: string },
+      context: GraphQLContext
+    ): Promise<boolean> => {
+      const { session, prisma, pubsub } = context;
+      const { conversationId } = args;
+
+      if (!session?.user) {
+        throw new GraphQLError("Not authorized");
+      }
+
+      try {
+        /**
+         * Delete conversation and all related entities
+         */
+        const [deletedConversation] = await prisma.$transaction([
+          prisma.conversation.delete({
+            where: {
+              id: conversationId,
+            },
+            include: conversationPopulated,
+          }),
+          prisma.conversationParticipant.deleteMany({
+            where: {
+              conversationId,
+            },
+          }),
+          prisma.message.deleteMany({
+            where: {
+              conversationId,
+            },
+          }),
+        ]);
+
+        pubsub.publish("CONVERSATION_DELETED", {
+          conversationDeleted: deletedConversation,
+        });
+
+        return true;
+      } catch (error) {
+        console.log("deleteConversation error", error);
+        throw new GraphQLError(error?.message);
+      }
+    },
   },
   Subscription: {
     conversationCreated: {
@@ -163,14 +211,86 @@ export const conversationResolvers = {
           context: GraphQLContext
         ) => {
           const { session } = context;
+          if (!session?.user) {
+            throw new GraphQLError("Not authorized");
+          }
+
+          const {
+            user: { id: userId },
+          } = session;
           const {
             conversationCreated: { participants },
           } = payload;
 
-          const useIsParticipant = !!participants.find(
-            (participant) => participant.userId === session?.user?.id
+          return userIsConversationParticipant(participants, userId);
+        }
+      ),
+    },
+    conversationUpdated: {
+      subscribe: withFilter(
+        (_: any, __: any, context: GraphQLContext) => {
+          const { pubsub } = context;
+
+          return pubsub.asyncIterator(["CONVERSATION_UPDATED"]);
+        },
+        (
+          payload: ConversationUpdatedSubscriptionData,
+          _: any,
+          context: GraphQLContext
+        ) => {
+          const { session } = context;
+
+          if (!session?.user) {
+            throw new GraphQLError("Not authorized");
+          }
+
+          const {
+            user: { id: userId },
+          } = session;
+
+          const {
+            conversationUpdated: {
+              conversation: { participants },
+              addedUserIds,
+              removedUserIds,
+            },
+          } = payload;
+
+          const userIsParticipant = userIsConversationParticipant(
+            participants,
+            userId
           );
-          return useIsParticipant;
+
+          return userIsParticipant;
+        }
+      ),
+    },
+    conversationDeleted: {
+      subscribe: withFilter(
+        (_: any, __: any, context: GraphQLContext) => {
+          const { pubsub } = context;
+
+          return pubsub.asyncIterator(["CONVERSATION_DELETED"]);
+        },
+        (
+          payload: ConversationDeletedSubscriptionPayload,
+          _,
+          context: GraphQLContext
+        ) => {
+          const { session } = context;
+
+          if (!session?.user) {
+            throw new GraphQLError("Not authorized");
+          }
+
+          const {
+            user: { id: userId },
+          } = session;
+          const {
+            conversationDeleted: { participants },
+          } = payload;
+
+          return userIsConversationParticipant(participants, userId);
         }
       ),
     },

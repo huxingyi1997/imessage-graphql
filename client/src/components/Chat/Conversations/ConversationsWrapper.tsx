@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from "@apollo/client";
+import { gql, useMutation, useQuery, useSubscription } from "@apollo/client";
 import { Box } from "@chakra-ui/react";
 import { Session } from "next-auth";
 import { FC, useEffect } from "react";
@@ -7,7 +7,9 @@ import ConversationList from "./ConversationList";
 import { ConversationOperations } from "../../../graphql/operations/converstion";
 import {
   ConversationCreatedSubscriptionData,
+  ConversationDeletedData,
   ConversationsData,
+  ConversationUpdatedData,
 } from "../../../util/types";
 import { useRouter } from "next/router";
 import SkeletonLoader from "../../common/SkeletonLoader";
@@ -41,6 +43,75 @@ const ConversationsWrapper: FC<ConversationsWrapperProps> = ({ session }) => {
     { markConversationAsRead: true },
     { userId: string; conversationId: string }
   >(ConversationOperations.Mutation.markConversationAsRead);
+
+  /**
+   * Subscriptions
+   */
+  useSubscription<ConversationUpdatedData>(
+    ConversationOperations.Subscription.conversationUpdated,
+    {
+      onData: ({ client, data }) => {
+        const { data: subscriptionData } = data;
+
+        if (!subscriptionData) return;
+
+        const {
+          conversationUpdated: {
+            conversation: updatedConversation,
+            addedUserIds,
+            removedUserIds,
+          },
+        } = subscriptionData;
+
+        const { id: updatedConversationId, latestMessage } =
+          updatedConversation;
+
+        /**
+         * Already viewing conversation where
+         * new message is received; no need
+         * to manually update cache due to
+         * message subscription
+         */
+        if (updatedConversationId === conversationId) {
+          onViewConversation(conversationId as string, false);
+          return;
+        }
+      },
+    }
+  );
+
+  useSubscription<ConversationDeletedData>(
+    ConversationOperations.Subscription.conversationDeleted,
+    {
+      onData: ({ client, data }) => {
+        const { data: subscriptionData } = data;
+
+        if (!subscriptionData) return;
+
+        const existing = client.readQuery<ConversationsData>({
+          query: ConversationOperations.Query.conversations,
+        });
+
+        if (!existing) return;
+
+        const { conversations } = existing;
+        const {
+          conversationDeleted: { id: deletedConversationId },
+        } = subscriptionData;
+
+        client.writeQuery<ConversationsData>({
+          query: ConversationOperations.Query.conversations,
+          data: {
+            conversations: conversations.filter(
+              (conversation) => conversation.id !== deletedConversationId
+            ),
+          },
+        });
+
+        router.push("/");
+      },
+    }
+  );
 
   const onViewConversation = async (
     conversationId: string,
@@ -173,6 +244,7 @@ const ConversationsWrapper: FC<ConversationsWrapperProps> = ({ session }) => {
       gap={4}
       px={3}
       py={6}
+      position="relative"
     >
       {conversationsLoading ? (
         <SkeletonLoader count={7} height="80px" width="360px" />

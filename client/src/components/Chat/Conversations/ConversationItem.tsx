@@ -32,6 +32,7 @@ interface ConversationItemProps {
   onClick: () => void;
   isSelected: boolean;
   hasSeenLatestMessage?: boolean;
+  onDeleteConversation: (conversationId: string) => Promise<void>;
 }
 
 const ConversationItem: FC<ConversationItemProps> = ({
@@ -39,6 +40,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
   conversation,
   onClick,
   hasSeenLatestMessage,
+  onDeleteConversation,
   isSelected,
 }) => {
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -73,6 +75,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
               event.stopPropagation();
               // onEditConversation();
             }}
+            _hover={{ bg: "whiteAlpha.300" }}
           >
             Edit
           </MenuItem>
@@ -83,6 +86,7 @@ const ConversationItem: FC<ConversationItemProps> = ({
                 event.stopPropagation();
                 // onLeaveConversation(conversation);
               }}
+              _hover={{ bg: "whiteAlpha.300" }}
             >
               Leave
             </MenuItem>
@@ -91,8 +95,9 @@ const ConversationItem: FC<ConversationItemProps> = ({
               icon={<MdDeleteOutline size={20} />}
               onClick={(event) => {
                 event.stopPropagation();
-                // onDeleteConversation(conversation.id);
+                onDeleteConversation(conversation.id);
               }}
+              _hover={{ bg: "whiteAlpha.300" }}
             >
               Delete
             </MenuItem>

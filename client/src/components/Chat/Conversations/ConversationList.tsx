@@ -1,12 +1,16 @@
-import { Box, Text } from "@chakra-ui/react";
+import { useMutation } from "@apollo/client";
+import { Box, Button, LinkBox, Text } from "@chakra-ui/react";
 import { Session } from "next-auth";
+import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import { FC, useState } from "react";
+import { toast } from "react-hot-toast";
 
 import {
   ConversationPopulated,
   ParticipantPopulated,
 } from "../../../../../server/src/util/types";
+import { ConversationOperations } from "../../../graphql/operations/converstion";
 import ConversationItem from "./ConversationItem";
 import ConversationModal from "./Modal";
 
@@ -39,14 +43,58 @@ const ConversationList: FC<ConversationListProps> = ({
     user: { id: userId },
   } = session;
 
+  /**
+   * Mutations
+   */
+  const [updateParticipants, { loading: updateParticipantsLoading }] =
+    useMutation<
+      { updateParticipants: boolean },
+      { conversationId: string; participantIds: Array<string> }
+    >(ConversationOperations.Mutation.updateParticipants);
+
+  const [deleteConversation] = useMutation<
+    { deleteConversation: boolean },
+    { conversationId: string }
+  >(ConversationOperations.Mutation.deleteConversation);
+
+  const onDeleteConversation = async (conversationId: string) => {
+    try {
+      toast.promise(
+        deleteConversation({
+          variables: {
+            conversationId,
+          },
+          update: () => {
+            router.replace(
+              typeof process.env.NEXT_PUBLIC_BASE_URL === "string"
+                ? process.env.NEXT_PUBLIC_BASE_URL
+                : ""
+            );
+          },
+        }),
+        {
+          loading: "Deleting conversation",
+          success: "Conversation deleted",
+          error: "Failed to delete conversation",
+        }
+      );
+    } catch (error) {
+      console.log("onDeleteConversation error", error);
+    }
+  };
+
   const getUserParticipantObject = (conversation: ConversationPopulated) => {
     return conversation.participants.find(
       (p: ParticipantPopulated) => p.user.id === userId
     ) as ParticipantPopulated;
   };
 
+  const sortedConversations = [...conversations].sort(
+    (a, b) => b.updatedAt.valueOf() - a.updatedAt.valueOf()
+  );
+
   return (
-    <Box width="100%">
+    <Box width="100%" overflow="hidden">
       <Box
         py={2}
         px={4}
@@ -61,7 +109,7 @@ const ConversationList: FC<ConversationListProps> = ({
         </Text>
       </Box>
       <ConversationModal session={session} isOpen={isOpen} onClose={onClose} />
-      {conversations.map((conversation) => {
+      {sortedConversations.map((conversation) => {
         const { hasSeenLatestMessage } = getUserParticipantObject(conversation);
 
         return (
@@ -73,10 +121,26 @@ const ConversationList: FC<ConversationListProps> = ({
             onClick={() =>
               onViewConversation(conversation.id, hasSeenLatestMessage)
             }
+            onDeleteConversation={onDeleteConversation}
             isSelected={conversation.id === router.query.conversationId}
           />
         );
       })}
+      <Box
+        position="absolute"
+        bottom={0}
+        left={0}
+        width="100%"
+        bg="#313131"
+        px={8}
+        py={6}
+        zIndex={1}
+        overflow="hidden"
+      >
+        <Button width="100%" onClick={() => signOut()}>
+          Logout
+        </Button>
+      </Box>
     </Box>
   );
 };
